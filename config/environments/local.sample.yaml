@@ -6,3 +6,5 @@ db:
   dbname: "fake"
 app:
   port: 8000
+  cors:
+    - "http://localhost:3000"
