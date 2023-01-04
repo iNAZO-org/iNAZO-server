@@ -2,6 +2,7 @@ package models
 
 import (
 	"karintou8710/iNAZO-server/database"
+	"karintou8710/iNAZO-server/scope"
 
 	"gorm.io/gorm"
 )
@@ -32,9 +33,10 @@ type GradeDistribution struct {
 	FCount  int // F
 }
 
-func (model *GradeDistribution) All() ([]*GradeDistribution, error) {
+func (model *GradeDistribution) ListWithPagination(pagination *scope.Pagination) error {
 	var gradeDitributionList []*GradeDistribution
 	db := database.GetDB()
-	err := db.Find(&gradeDitributionList).Error
-	return gradeDitributionList, err
+	err := db.Scopes(scope.PaginateScope(gradeDitributionList, pagination)).Find(&gradeDitributionList).Error
+	pagination.Rows = gradeDitributionList
+	return err
 }
