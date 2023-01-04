@@ -3,6 +3,7 @@ package controllers
 import (
 	"karintou8710/iNAZO-server/models"
 	"karintou8710/iNAZO-server/scope"
+	"karintou8710/iNAZO-server/views"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -25,9 +26,14 @@ func (controller *GradeDistributionController) Search(c echo.Context) error {
 		return err
 	}
 
+	result, err := views.GradeDistributionWithPaginationView(&pagination)
+	if err != nil {
+		return err
+	}
+
 	return c.JSON(http.StatusOK, newResponse(
 		http.StatusOK,
 		http.StatusText(http.StatusOK),
-		pagination,
+		result,
 	))
 }
