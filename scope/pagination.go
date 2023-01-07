@@ -8,12 +8,16 @@ import (
 )
 
 type Pagination struct {
-	Limit      int    `query:"limit"`
-	Page       int    `query:"page"`
-	Sort       string `query:"sort"`
+	Limit      int
+	Page       int
 	TotalRows  int64
 	TotalPages int
 	Rows       interface{}
+}
+
+type PaginationQuery struct {
+	Limit int `query:"limit"`
+	Page  int `query:"page"`
 }
 
 func (p *Pagination) GetOffset() int {
@@ -34,13 +38,6 @@ func (p *Pagination) GetPage() int {
 	return p.Page
 }
 
-func (p *Pagination) GetSort() string {
-	if p.Sort == "" {
-		p.Sort = "id ASC"
-	}
-	return p.Sort
-}
-
 func PaginateScope(model interface{}, pagination *Pagination) func(db *gorm.DB) *gorm.DB {
 	var totalRows int64
 	db := database.GetDB()
@@ -51,6 +48,6 @@ func PaginateScope(model interface{}, pagination *Pagination) func(db *gorm.DB) 
 	pagination.TotalPages = totalPages
 
 	return func(db *gorm.DB) *gorm.DB {
-		return db.Offset(pagination.GetOffset()).Limit(pagination.GetLimit()).Order(pagination.GetSort())
+		return db.Offset(pagination.GetOffset()).Limit(pagination.GetLimit())
 	}
 }

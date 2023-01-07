@@ -33,10 +33,37 @@ type GradeDistribution struct {
 	FCount  int // F
 }
 
-func (model *GradeDistribution) ListWithPagination(pagination *scope.Pagination) error {
+func SortScope(sortQuery string) func(db *gorm.DB) *gorm.DB {
+
+	return func(db *gorm.DB) *gorm.DB {
+		if sortQuery == "gpa" {
+			db = db.Order("gpa ASC")
+		} else if sortQuery == "-gpa" {
+			db = db.Order("gpa DESC")
+		} else if sortQuery == "failure" {
+			db = db.Order("(d_count + dm_count + f_count) * 100 / student_count ASC")
+		} else if sortQuery == "-failure" {
+			db = db.Order("(d_count + dm_count + f_count) * 100 / student_count DESC")
+		} else if sortQuery == "a_band" {
+			db = db.Order("(ap_count + a_count + am_count) * 100 / student_count ASC")
+		} else if sortQuery == "-a_band" {
+			db = db.Order("(ap_count + a_count + am_count) * 100 / student_count DESC")
+		} else if sortQuery == "-f" {
+			db = db.Order("f_count * 100 / student_count DESC")
+		}
+		return db.Order("year DESC, semester DESC")
+	}
+}
+
+func (model *GradeDistribution) ListWithPagination(pagination *scope.Pagination, searchQuery, sortQuery string) error {
 	var gradeDitributionList []*GradeDistribution
 	db := database.GetDB()
-	err := db.Scopes(scope.PaginateScope(gradeDitributionList, pagination)).Find(&gradeDitributionList).Error
+
+	err := db.Scopes(
+		scope.PaginateScope(gradeDitributionList, pagination),
+		SortScope(sortQuery),
+	).
+		Find(&gradeDitributionList).Error
 	pagination.Rows = gradeDitributionList
 	return err
 }

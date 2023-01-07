@@ -11,22 +11,36 @@ import (
 
 type GradeDistributionController struct{}
 
+type RequestQuery struct {
+	scope.PaginationQuery
+	Sort   string `query:"sort"`
+	Search string `query:"search"`
+}
+
 func NewGradeDistributionController() *GradeDistributionController {
 	return new(GradeDistributionController)
 }
 
+func (r *RequestQuery) NewPaginationFromRequestQuery() *scope.Pagination {
+	return &scope.Pagination{
+		Limit: r.Limit,
+		Page:  r.Page,
+	}
+}
+
 func (controller *GradeDistributionController) Search(c echo.Context) error {
 	var gradeModel models.GradeDistribution
-	var pagination scope.Pagination
-	if err := c.Bind(&pagination); err != nil {
+	var requestQuery RequestQuery
+	if err := c.Bind(&requestQuery); err != nil {
 		return err
 	}
-	err := gradeModel.ListWithPagination(&pagination)
+	pagination := requestQuery.NewPaginationFromRequestQuery()
+	err := gradeModel.ListWithPagination(pagination, requestQuery.Search, requestQuery.Sort)
 	if err != nil {
 		return err
 	}
 
-	result, err := views.GradeDistributionWithPaginationView(&pagination)
+	result, err := views.GradeDistributionWithPaginationView(pagination)
 	if err != nil {
 		return err
 	}

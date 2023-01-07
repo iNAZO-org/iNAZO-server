@@ -2,6 +2,7 @@ package views
 
 import (
 	"fmt"
+
 	"karintou8710/iNAZO-server/models"
 	"karintou8710/iNAZO-server/scope"
 )
@@ -74,7 +75,6 @@ func GradeDistributionWithPaginationView(pagination *scope.Pagination) (*Paginat
 	return &PaginationView{
 		Limit:      pagination.Limit,
 		Page:       pagination.Page,
-		Sort:       pagination.Sort,
 		TotalPages: pagination.TotalPages,
 		TotalRows:  pagination.TotalRows,
 		Rows:       gradeDistributionViewList,
