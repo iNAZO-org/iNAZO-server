@@ -3,6 +3,7 @@ package models
 import (
 	"karintou8710/iNAZO-server/database"
 	"karintou8710/iNAZO-server/scope"
+	"regexp"
 
 	"gorm.io/gorm"
 )
@@ -60,13 +61,15 @@ func SearchScope(searchQuery string) func(db *gorm.DB) *gorm.DB {
 			return db
 		}
 
-		return db.Where("translate_case(subject) LIKE '%' || translate_case(?) || '%'", searchQuery).
-			Or("translate_case(sub_title) LIKE '%' || translate_case(?) || '%'", searchQuery).
-			Or("translate_case(class) LIKE '%' || translate_case(?) || '%'", searchQuery).
-			Or("translate_case(teacher) LIKE '%' || translate_case(?) || '%'", searchQuery).
-			Or("translate_case(year::TEXT) LIKE '%' || translate_case(?) || '%'", searchQuery).
-			Or("translate_case(semester::TEXT) LIKE '%' || translate_case(?) || '%'", searchQuery).
-			Or("translate_case(faculty) LIKE '%' || translate_case(?) || '%'", searchQuery)
+		// 複数項目の検索をORを利用しないことで高速化
+		for _, q := range regexp.MustCompile("[\\s]+").Split(searchQuery, -1) {
+			db = db.Where(`
+			translate_case(subject || ' ' || sub_title || ' ' || class || ' ' ||
+			teacher || ' ' || year::TEXT || ' ' || semester::TEXT || ' ' || faculty)
+			LIKE '%' || translate_case(?) || '%'`, q)
+		}
+
+		return db
 	}
 }
 
