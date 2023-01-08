@@ -34,7 +34,6 @@ type GradeDistribution struct {
 }
 
 func SortScope(sortQuery string) func(db *gorm.DB) *gorm.DB {
-
 	return func(db *gorm.DB) *gorm.DB {
 		if sortQuery == "gpa" {
 			db = db.Order("gpa ASC")
@@ -55,13 +54,30 @@ func SortScope(sortQuery string) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
+func SearchScope(searchQuery string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if searchQuery == "" {
+			return db
+		}
+
+		return db.Where("translate_case(subject) LIKE '%' || translate_case(?) || '%'", searchQuery).
+			Or("translate_case(sub_title) LIKE '%' || translate_case(?) || '%'", searchQuery).
+			Or("translate_case(class) LIKE '%' || translate_case(?) || '%'", searchQuery).
+			Or("translate_case(teacher) LIKE '%' || translate_case(?) || '%'", searchQuery).
+			Or("translate_case(year::TEXT) LIKE '%' || translate_case(?) || '%'", searchQuery).
+			Or("translate_case(semester::TEXT) LIKE '%' || translate_case(?) || '%'", searchQuery).
+			Or("translate_case(faculty) LIKE '%' || translate_case(?) || '%'", searchQuery)
+	}
+}
+
 func (model *GradeDistribution) ListWithPagination(pagination *scope.Pagination, searchQuery, sortQuery string) error {
 	var gradeDitributionList []*GradeDistribution
-	db := database.GetDB()
+	db := database.GetDB().Model(gradeDitributionList)
 
 	err := db.Scopes(
-		scope.PaginateScope(gradeDitributionList, pagination),
 		SortScope(sortQuery),
+		SearchScope(searchQuery),
+		scope.PaginateScope(pagination),
 	).
 		Find(&gradeDitributionList).Error
 	pagination.Rows = gradeDitributionList

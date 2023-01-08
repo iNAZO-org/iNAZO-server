@@ -1,7 +1,6 @@
 package scope
 
 import (
-	"karintou8710/iNAZO-server/database"
 	"math"
 
 	"gorm.io/gorm"
@@ -38,16 +37,15 @@ func (p *Pagination) GetPage() int {
 	return p.Page
 }
 
-func PaginateScope(model interface{}, pagination *Pagination) func(db *gorm.DB) *gorm.DB {
-	var totalRows int64
-	db := database.GetDB()
-	db.Model(model).Count(&totalRows)
-
-	pagination.TotalRows = totalRows
-	totalPages := int(math.Ceil(float64(totalRows) / float64(pagination.GetLimit())))
-	pagination.TotalPages = totalPages
-
+func PaginateScope(pagination *Pagination) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
+		session := db.Session(&gorm.Session{})
+		var totalRows int64
+		session.Count(&totalRows)
+
+		pagination.TotalRows = totalRows
+		totalPages := int(math.Ceil(float64(totalRows) / float64(pagination.GetLimit())))
+		pagination.TotalPages = totalPages
 		return db.Offset(pagination.GetOffset()).Limit(pagination.GetLimit())
 	}
 }
